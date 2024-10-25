@@ -80,23 +80,23 @@ module DimensionHandlers = {
   } // Type of the data returned by the /dimensions endpoint
 
   let createInitialServerState = () => {
-    id: "string",
+    id: "0",
     margin_top: "string",
     margin_bottom: "string",
     margin_left: "string",
     margin_right: "string",
-    margin_top_unit: "string",
-    margin_bottom_unit: "string",
-    margin_left_unit: "string",
-    margin_right_unit: "string",
+    margin_top_unit: "px",
+    margin_bottom_unit: "px",
+    margin_left_unit: "px",
+    margin_right_unit: "px",
     padding_top: "string",
     padding_bottom: "string",
     padding_left: "string",
     padding_right: "string",
-    padding_top_unit: "string",
-    padding_bottom_unit: "string",
-    padding_left_unit: "string",
-    padding_right_unit: "string",
+    padding_top_unit: "px",
+    padding_bottom_unit: "px",
+    padding_left_unit: "px",
+    padding_right_unit: "px",
   }
 
   type dimensions = {
@@ -203,11 +203,14 @@ module DimensionContext = {
     // updateColumn: (~key: string, ~newValue: string) => void,
   }
 
-  let (currentRow, setCurrentRow) = React.useState(() =>
-    DimensionHandlers.createInitialServerState()
+  let context = React.createContext(
+    (
+      {
+        currentRow: DimensionHandlers.createInitialServerState(),
+        setCurrentRow: _ => (),
+      }: server_dimension_context
+    ),
   )
-
-  let context = React.createContext({currentRow: currentRow, setCurrentRow: setCurrentRow})
 
   module Provider = {
     let provider = React.Context.provider(context)
@@ -216,6 +219,22 @@ module DimensionContext = {
     let make = (~value, ~children) => {
       React.createElement(provider, {"value": value, "children": children})
     }
+  }
+}
+module ServerDimensionProvider = {
+  @react.component
+  let make = (~children) => {
+    let (currentRowState, setCurrentRowState) = React.useState(() =>
+      DimensionHandlers.createInitialServerState()
+    )
+
+    <DimensionContext.Provider
+      value={
+        DimensionContext.currentRow: currentRowState,
+        DimensionContext.setCurrentRow: setCurrentRowState,
+      }>
+      {children}
+    </DimensionContext.Provider>
   }
 }
 
@@ -359,14 +378,10 @@ module PaddingSelector = {
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
   <aside className="PropertiesPanel">
-    <DimensionContext.Provider
-      value={
-        DimensionContext.currentRow: DimensionContext.currentRow,
-        DimensionContext.setCurrentRow: DimensionContext.setCurrentRow,
-      }>
+    <ServerDimensionProvider>
       <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
       <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
-    </DimensionContext.Provider>
+    </ServerDimensionProvider>
   </aside>
 }
