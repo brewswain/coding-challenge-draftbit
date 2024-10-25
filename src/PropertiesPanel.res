@@ -62,7 +62,7 @@ module DimensionInput = {
   let make = (~value, ~onBlur, ~unit, ~onChange, ~onUnitChange, ~dimensionKey) => {
     let (isFocused, setIsFocused) = React.useState(() => false)
 
-    // LLM generated regex validation to ensure only numbers are inputted
+    // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could be a very concise solution.
     let handleKeyDown = event => {
       let key = ReactEvent.Keyboard.key(event)
       let allowedCharactersRegex = %re("/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight/")
@@ -72,7 +72,7 @@ module DimensionInput = {
       }
     }
 
-    <div
+    <label
       className={`Dimension-input-container ${!isFocused && value !== "auto"
           ? "Dimension-input-container--active"
           : ""}`}
@@ -86,6 +86,7 @@ module DimensionInput = {
         className={`Dimension-input ${!isFocused && value !== "auto"
             ? "Dimension-input--active"
             : ""}`}
+      
         onClick={event => {
           let input = ReactEvent.Mouse.currentTarget(event)
           input["select"](.)
@@ -109,10 +110,12 @@ module DimensionInput = {
             </button>
           : React.null
       }
-    </div>
+    </label>
   }
 }
 
+
+// Code length became very much an issue when I had separate handlers in both the Padding and Margin Seleector modules, with a bunch of duplicated code. I solved this by Abstracting this logic and baseline state into its own util module. The tradeoff here is that now There's a bit of a clarity issue--This handler doesn't inherently differentiate between padding and margin. To solve this, I added an additional field: dimension_type. We'll use this parameter when making oor API call to determine which columns get updated.
 module DimensionHandlers = {
   type dimensions = {
     top: string,
@@ -123,6 +126,7 @@ module DimensionHandlers = {
     bottom_unit: string,
     left_unit: string,
     right_unit: string,
+    dimension_type: string,
   }
 
   let createInitialState = () => {
@@ -134,6 +138,7 @@ module DimensionHandlers = {
     bottom_unit: "px",
     left_unit: "px",
     right_unit: "px",
+    dimension_type: "padding",
   }
 
   let handleChange = (~key: string, ~newValue: string, ~dimensions, ~setDimensions) => {
@@ -150,7 +155,7 @@ module DimensionHandlers = {
     )
   }
 
-  // Semi-hacky way to ensure that our blank input only reverts to "auto" when the user clicks away from it. If I did it in handleChange, it would revert to "auto" on every keystroke when the input is blank.
+  // Semi-hacky way to ensure that our blank input only reverts to "auto" when the user clicks away from it. If I did it in handleChange, it would revert to "auto" on every keystroke when the input is blank. Also, Placing api calls to our handleBlur manager helps prevent needless db operations.
   let handleBlur = (~key: string, ~newValue: string, ~dimensions, ~setDimensions) => {
     let value = newValue === "" ? "auto" : newValue
 
@@ -205,7 +210,7 @@ module PaddingSelector = {
     let handleUnitChange = (~key: string) =>
       DimensionHandlers.handleUnitChange(~key, ~dimensions=padding, ~setDimensions=setPadding)
 
-    <div className="PaddingSelector-container">
+    <fieldset className="PaddingSelector-container">
       <div className="Dimension-centered">
         <DimensionInput
           value={padding.top}
@@ -244,7 +249,7 @@ module PaddingSelector = {
           dimensionKey="bottom"
         />
       </div>
-    </div>
+    </fieldset>
   }
 }
 
@@ -265,7 +270,7 @@ module MarginSelector = {
     let handleUnitChange = (~key: string) =>
       DimensionHandlers.handleUnitChange(~key, ~dimensions=margin, ~setDimensions=setMargin)
 
-    <div className="MarginSelector-container">
+    <fieldset className="MarginSelector-container">
       <div className="MarginSelector-subwrapper">
         <div className="Dimension-centered">
           <DimensionInput
@@ -307,7 +312,7 @@ module MarginSelector = {
         </div>
         <PaddingSelector />
       </div>
-    </div>
+    </fieldset>
   }
 }
 
