@@ -199,11 +199,15 @@ module DimensionHandlers = {
 module DimensionContext = {
   type server_dimension_context = {
     currentRow: DimensionHandlers.serverDimension,
-    setCurrentRow: DimensionHandlers.serverDimension => unit,
+    setCurrentRow: (DimensionHandlers.serverDimension => DimensionHandlers.serverDimension) => unit,
     // updateColumn: (~key: string, ~newValue: string) => void,
   }
 
-  let context = React.createContext(DimensionHandlers.createInitialServerState())
+  let (currentRow, setCurrentRow) = React.useState(() =>
+    DimensionHandlers.createInitialServerState()
+  )
+
+  let context = React.createContext({currentRow: currentRow, setCurrentRow: setCurrentRow})
 
   module Provider = {
     let provider = React.Context.provider(context)
@@ -275,9 +279,9 @@ module MarginSelector = {
   @react.component
   let make = () => {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
-    let testContext = React.useContext(DimensionContext.context)
+    let test = React.useContext(DimensionContext.context)
 
-    Js.log(testContext)
+    Js.log(test)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
     // let (serverDimensions, setServerDimensions) = React.useState(
     //   DimensionHandlers.createInitialState(),
@@ -355,7 +359,11 @@ module PaddingSelector = {
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
   <aside className="PropertiesPanel">
-    <DimensionContext.Provider value={DimensionHandlers.createInitialServerState()}>
+    <DimensionContext.Provider
+      value={
+        DimensionContext.currentRow: DimensionContext.currentRow,
+        DimensionContext.setCurrentRow: DimensionContext.setCurrentRow,
+      }>
       <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
       <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
