@@ -57,63 +57,7 @@ module ViewExamples = {
   }
 }
 
-module DimensionInput = {
-  @react.component
-  let make = (~value, ~onBlur, ~unit, ~onChange, ~onUnitChange, ~dimensionKey) => {
-    let (isFocused, setIsFocused) = React.useState(() => false)
-
-    // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could be a very concise solution.
-    let handleKeyDown = event => {
-      let key = ReactEvent.Keyboard.key(event)
-      let allowedCharactersRegex = %re("/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight/")
-
-      if !Js.Re.test_(allowedCharactersRegex, key) {
-        ReactEvent.Keyboard.preventDefault(event)
-      }
-    }
-
-    <label
-      className={`Dimension-input-container ${!isFocused && value !== "auto"
-          ? "Dimension-input-container--active"
-          : ""}`}
-      onFocus={_ => setIsFocused(_ => true)}
-      onMouseDown={event => {
-        ReactEvent.Mouse.stopPropagation(event)
-        ReactEvent.Mouse.preventDefault(event)
-      }}
-      onBlur={_ => setIsFocused(_ => false)}>
-      <input
-        className={`Dimension-input ${!isFocused && value !== "auto"
-            ? "Dimension-input--active"
-            : ""}`}
-        onClick={event => {
-          let input = ReactEvent.Mouse.currentTarget(event)
-          input["select"](.)
-        }}
-        onBlur={event => {
-          onBlur(~key=dimensionKey, ~newValue=ReactEvent.Focus.target(event)["value"])
-        }}
-        value
-        onChange={event =>
-          onChange(~key=dimensionKey, ~newValue=ReactEvent.Form.target(event)["value"])}
-        onKeyDown={handleKeyDown}
-      />
-      {
-        // Causes some  Layout shift, can solve this with opacity or by placing the button in the input, but judged this wasn't a showstopper for a demo
-        isFocused || value !== "auto"
-          ? <button
-              className="Dimension-button"
-              disabled={!isFocused}
-              onClick={_ => onUnitChange(~key=dimensionKey)}>
-              {unit->React.string}
-            </button>
-          : React.null
-      }
-    </label>
-  }
-}
-
-// Code length became very much an issue when I had separate handlers in both the Padding and Margin Seleector modules, with a bunch of duplicated code. I solved this by Abstracting this logic and baseline state into its own util module. The tradeoff here is that now There's a bit of a clarity issue--This handler doesn't inherently differentiate between padding and margin. To solve this, I added an additional field: dimension_type. We'll use this parameter when making oor API call to determine which columns get updated.
+// Code length became very much an issue when I had separate handlers in both the Padding and Margin Seleector modules, with a bunch of duplicated code. I solved this by Abstracting this logic and baseline state into its own util module. The tradeoff here is that now There's a bit of a clarity issue--This handler doesn't inherently differentiate between padding and margin. To solve this, I added an additional field: dimension_type. We'll use this parameter when making oor API call to determine which columns get updated. Realistically, having separate handlers would have been easier, but I was interested in seeing how I could solve this problem with a bit of abstraction.
 module DimensionHandlers = {
   type serverDimension = {
     id: string,
@@ -230,10 +174,84 @@ module DimensionHandlers = {
   }
 }
 
+// I Elected to keep everything in a monolithic file for ease of demonstration.
+// Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel.
+module DimensionContext = {
+  type server_dimension_context = {
+    current_row: DimensionHandlers.serverDimension,
+    updateColumn: (~key: string, ~newValue: string) => void,
+  }
+
+  let context = React.createContext(None)
+
+  module Provider = {
+    let make = React.Context.provider(context)
+  }
+}
+
+module DimensionInput = {
+  @react.component
+  let make = (~value, ~onBlur, ~unit, ~onChange, ~onUnitChange, ~dimensionKey) => {
+    let (isFocused, setIsFocused) = React.useState(() => false)
+
+    // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could/should be a very concise solution.
+    let handleKeyDown = event => {
+      let key = ReactEvent.Keyboard.key(event)
+      let allowedCharactersRegex = %re("/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight/")
+
+      if !Js.Re.test_(allowedCharactersRegex, key) {
+        ReactEvent.Keyboard.preventDefault(event)
+      }
+    }
+
+    <label
+      className={`Dimension-input-container ${!isFocused && value !== "auto"
+          ? "Dimension-input-container--active"
+          : ""}`}
+      onFocus={_ => setIsFocused(_ => true)}
+      onMouseDown={event => {
+        ReactEvent.Mouse.stopPropagation(event)
+        ReactEvent.Mouse.preventDefault(event)
+      }}
+      onBlur={_ => setIsFocused(_ => false)}>
+      <input
+        className={`Dimension-input ${!isFocused && value !== "auto"
+            ? "Dimension-input--active"
+            : ""}`}
+        onClick={event => {
+          let input = ReactEvent.Mouse.currentTarget(event)
+          input["select"](.)
+        }}
+        onBlur={event => {
+          onBlur(~key=dimensionKey, ~newValue=ReactEvent.Focus.target(event)["value"])
+        }}
+        value
+        onChange={event =>
+          onChange(~key=dimensionKey, ~newValue=ReactEvent.Form.target(event)["value"])}
+        onKeyDown={handleKeyDown}
+      />
+      {
+        // Causes some  Layout shift, can solve this with opacity or by placing the button in the input, but judged this wasn't a showstopper for a demo. Also, the actual UI's a bit off but just wanted an approximation since the functionality was more the focus.
+        isFocused || value !== "auto"
+          ? <button
+              className="Dimension-button"
+              disabled={!isFocused}
+              onClick={_ => onUnitChange(~key=dimensionKey)}>
+              {unit->React.string}
+            </button>
+          : React.null
+      }
+    </label>
+  }
+}
+
 module MarginSelector = {
   @react.component
   let make = () => {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
+    let dimensions = React.useContext(DimensionContext.context)
+
+    Js.log(dimensions)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
     let (
       serverDimensions: option<array<serverDimension>>,
@@ -393,8 +411,10 @@ module PaddingSelector = {
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
   <aside className="PropertiesPanel">
-    <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
-    <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
-    <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
+    <DimensionContext.Provider value=DimensionContext>
+      <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
+      <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
+      <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
+    </DimensionContext.Provider>
   </aside>
 }
