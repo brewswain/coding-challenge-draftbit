@@ -79,6 +79,26 @@ module DimensionHandlers = {
     padding_right_unit: string,
   } // Type of the data returned by the /dimensions endpoint
 
+  let createInitialServerState = () => {
+    id: "string",
+    margin_top: "string",
+    margin_bottom: "string",
+    margin_left: "string",
+    margin_right: "string",
+    margin_top_unit: "string",
+    margin_bottom_unit: "string",
+    margin_left_unit: "string",
+    margin_right_unit: "string",
+    padding_top: "string",
+    padding_bottom: "string",
+    padding_left: "string",
+    padding_right: "string",
+    padding_top_unit: "string",
+    padding_bottom_unit: "string",
+    padding_left_unit: "string",
+    padding_right_unit: "string",
+  }
+
   type dimensions = {
     top: string,
     bottom: string,
@@ -178,14 +198,20 @@ module DimensionHandlers = {
 // Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel.
 module DimensionContext = {
   type server_dimension_context = {
-    current_row: DimensionHandlers.serverDimension,
-    updateColumn: (~key: string, ~newValue: string) => void,
+    currentRow: DimensionHandlers.serverDimension,
+    setCurrentRow: DimensionHandlers.serverDimension => unit,
+    // updateColumn: (~key: string, ~newValue: string) => void,
   }
 
-  let context = React.createContext(None)
+  let context = React.createContext(DimensionHandlers.createInitialServerState())
 
   module Provider = {
-    let make = React.Context.provider(context)
+    let provider = React.Context.provider(context)
+
+    @react.component
+    let make = (~value, ~children) => {
+      React.createElement(provider, {"value": value, "children": children})
+    }
   }
 }
 
@@ -249,169 +275,87 @@ module MarginSelector = {
   @react.component
   let make = () => {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
-    let dimensions = React.useContext(DimensionContext.context)
+    let testContext = React.useContext(DimensionContext.context)
 
-    Js.log(dimensions)
+    Js.log(testContext)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
-    let (
-      serverDimensions: option<array<serverDimension>>,
-      setServerDimensions,
-    ) = React.useState(_ => None)
+    // let (serverDimensions, setServerDimensions) = React.useState(
+    //   DimensionHandlers.createInitialState(),
+    // )
 
-    let handleChange = (~key: string, ~newValue: string) => {
-      Js.log("handleChange")
-      DimensionHandlers.handleChange(
-        ~key,
-        ~newValue,
-        ~dimensions=margin,
-        ~setDimensions=setMargin,
-        ~dimension_type="margin",
-      )
-    }
+    // let handleChange = (~key: string, ~newValue: string) => {
+    //   Js.log("handleChange")
+    //   DimensionHandlers.handleChange(
+    //     ~key,
+    //     ~newValue,
+    //     ~dimensions=margin,
+    //     ~setDimensions=setMargin,
+    //     ~dimension_type="margin",
+    //   )
+    // }
 
-    let handleBlur = (~key: string, ~newValue: string) => {
-      DimensionHandlers.handleBlur(
-        ~key,
-        ~newValue,
-        ~dimensions=margin,
-        ~setDimensions=setMargin,
-        ~dimension_type="margin",
-      )
-    }
+    // let handleBlur = (~key: string, ~newValue: string) => {
+    //   DimensionHandlers.handleBlur(
+    //     ~key,
+    //     ~newValue,
+    //     ~dimensions=margin,
+    //     ~setDimensions=setMargin,
+    //     ~dimension_type="margin",
+    //   )
+    // }
 
-    let handleUnitChange = (~key: string) =>
-      DimensionHandlers.handleUnitChange(
-        ~key,
-        ~dimensions=margin,
-        ~setDimensions=setMargin,
-        ~dimension_type="margin",
-      )
+    // let handleUnitChange = (~key: string) =>
+    //   DimensionHandlers.handleUnitChange(
+    //     ~key,
+    //     ~dimensions=margin,
+    //     ~setDimensions=setMargin,
+    //     ~dimension_type="margin",
+    //   )
 
-    <fieldset className="MarginSelector-container">
-      <div className="MarginSelector-subwrapper">
-        <div className="Dimension-centered">
-          <DimensionInput
-            value={margin.top}
-            unit={margin.top_unit}
-            onBlur={handleBlur}
-            onChange={handleChange}
-            onUnitChange={handleUnitChange}
-            dimensionKey="top"
-          />
-        </div>
-        <div className="Selector-row">
-          <DimensionInput
-            value={margin.left}
-            unit={margin.left_unit}
-            onBlur={handleBlur}
-            onChange={handleChange}
-            onUnitChange={handleUnitChange}
-            dimensionKey="left"
-          />
-          <DimensionInput
-            value={margin.right}
-            unit={margin.right_unit}
-            onBlur={handleBlur}
-            onChange={handleChange}
-            onUnitChange={handleUnitChange}
-            dimensionKey="right"
-          />
-        </div>
-        <div className="Dimension-centered">
-          <DimensionInput
-            value={margin.bottom}
-            unit={margin.bottom_unit}
-            onBlur={handleBlur}
-            onChange={handleChange}
-            onUnitChange={handleUnitChange}
-            dimensionKey="bottom"
-          />
-        </div>
-        <PaddingSelector serverDimensions setServerDimensions />
-      </div>
-    </fieldset>
+    <fieldset className="MarginSelector-container" />
   }
 }
 
 module PaddingSelector = {
   type padding = DimensionHandlers.dimensions
   @react.component
-  let make = (~serverDimensions: option<array<serverDimension>>, ~setServerDimensions) => {
+  let make = (~serverDimensions, ~setServerDimensions) => {
     let (padding, setPadding) = React.useState(() => DimensionHandlers.createInitialState())
 
-    let handleChange = (~key: string, ~newValue: string) =>
-      DimensionHandlers.handleChange(
-        ~key,
-        ~newValue,
-        ~dimensions=padding,
-        ~setDimensions=setPadding,
-        ~dimension_type="padding",
-      )
+    // let handleChange = (~key: string, ~newValue: string) =>
+    //   DimensionHandlers.handleChange(
+    //     ~key,
+    //     ~newValue,
+    //     ~dimensions=padding,
+    //     ~setDimensions=setPadding,
+    //     ~dimension_type="padding",
+    //   )
 
-    let handleBlur = (~key: string, ~newValue: string) =>
-      DimensionHandlers.handleBlur(
-        ~key,
-        ~newValue,
-        ~dimensions=padding,
-        ~setDimensions=setPadding,
-        ~dimension_type="padding",
-      )
+    // let handleBlur = (~key: string, ~newValue: string) =>
+    //   DimensionHandlers.handleBlur(
+    //     ~key,
+    //     ~newValue,
+    //     ~dimensions=padding,
+    //     ~setDimensions=setPadding,
+    //     ~dimension_type="padding",
+    //   )
 
-    let handleUnitChange = (~key: string) =>
-      DimensionHandlers.handleUnitChange(
-        ~key,
-        ~dimensions=padding,
-        ~setDimensions=setPadding,
-        ~dimension_type="padding",
-      )
+    // let handleUnitChange = (~key: string) =>
+    //   DimensionHandlers.handleUnitChange(
+    //     ~key,
+    //     ~dimensions=padding,
+    //     ~setDimensions=setPadding,
+    //     ~dimension_type="padding",
+    //   )
 
-    <fieldset className="PaddingSelector-container">
-      <div className="Dimension-centered">
-        <DimensionInput
-          value={padding.top}
-          unit={padding.top_unit}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onUnitChange={handleUnitChange}
-          dimensionKey="top"
-        />
-      </div>
-      <div className="Selector-row">
-        <DimensionInput
-          value={padding.left}
-          unit={padding.left_unit}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onUnitChange={handleUnitChange}
-          dimensionKey="left"
-        />
-        <DimensionInput
-          value={padding.right}
-          unit={padding.right_unit}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onUnitChange={handleUnitChange}
-          dimensionKey="right"
-        />
-      </div>
-      <div className="Dimension-centered">
-        <DimensionInput
-          value={padding.bottom}
-          unit={padding.bottom_unit}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onUnitChange={handleUnitChange}
-          dimensionKey="bottom"
-        />
-      </div>
-    </fieldset>
+    <fieldset className="PaddingSelector-container" />
   }
 }
 
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
   <aside className="PropertiesPanel">
-    <DimensionContext.Provider value=DimensionContext>
+    <DimensionContext.Provider value={DimensionHandlers.createInitialServerState()}>
       <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
       <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
