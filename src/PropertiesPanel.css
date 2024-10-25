@@ -1,0 +1,118 @@
+.PropertiesPanel {
+   width: 320px;
+   background-color: #3d4b6c;
+   height: 100vh;
+}
+
+.Collapsible {
+   margin-bottom: 2px;
+}
+
+.Collapsible-button {
+   width: 100%;
+   display: flex;
+   justify-content: space-between;
+   background-color: #28334d;
+   border: none;
+   padding: 8px;
+   color: white;
+   font-size: 16px;
+   cursor: pointer;
+}
+
+.Collapsible-content {
+   margin: 8px;
+}
+/* UI is slightly janky, but it works overall */
+
+.MarginSelector-container {
+   display: flex;
+   background-color: #28334d;
+   justify-content: center;
+   min-height: 200px;
+   padding: 5px;
+   border-radius: 8px;
+}
+.MarginSelector-subwrapper {
+   display: flex;
+   background-color: #3d4b6c;
+   width: 100%;
+   flex-direction: column;
+   justify-content: space-between;
+   position: relative;
+   min-height: 200px;
+   border-radius: 8px;
+}
+
+.Selector-row {
+   display: flex;
+   justify-content: space-between;
+}
+
+.Dimension-centered {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+.PaddingSelector-container {
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   width: 50%;
+   transform: translate(-50%, -50%);
+   min-height: 100px;
+   padding: 5px;
+   border: 4px solid #28334d;
+}
+
+.Dimension-input-container {
+   display: flex;
+   align-items: center;
+   position: relative;
+   max-width: 8ch;
+}
+
+.Dimension-input-container:focus-within {
+   outline: none;
+   border: 1px solid #2594cd;
+   color: white;
+   background-color: #28334d;
+}
+
+.Dimension-input-container--active {
+   border-radius: 0;
+   border-bottom: 2px dotted #c0a564;
+}
+.Dimension-input {
+   width: 4ch;
+   display: flex;
+   color: #7f89a2;
+   background: none;
+   border: none;
+   font-size: 12px;
+   text-align: center;
+   border-radius: 8px;
+   justify-content: center;
+   padding: 6px 4ch 6px 4px;
+}
+
+.Dimension-input:focus {
+   color: white;
+   outline: none;
+   border: none;
+}
+.Dimension-input--active {
+   color: white;
+}
+
+.Dimension-button {
+   background: none;
+   color: white;
+   border: none;
+   position: absolute;
+   right: 0;
+}
