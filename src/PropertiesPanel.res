@@ -136,10 +136,86 @@ module DimensionHandlers = {
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
     setDimensions(prevDimensions =>
       switch key {
-      | "top" => {...prevDimensions, top: validatedValue, dimension_type: dimension_type}
-      | "bottom" => {...prevDimensions, bottom: validatedValue, dimension_type: dimension_type}
-      | "left" => {...prevDimensions, left: validatedValue, dimension_type: dimension_type}
-      | "right" => {...prevDimensions, right: validatedValue, dimension_type: dimension_type}
+      | "margin_top" => {
+          ...prevDimensions,
+          margin_top: validatedValue,
+        }
+      | "margin_bottom" => {
+          ...prevDimensions,
+          margin_bottom: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_left" => {
+          ...prevDimensions,
+          margin_left: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_right" => {
+          ...prevDimensions,
+          margin_right: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_top" => {
+          ...prevDimensions,
+          padding_top: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_bottom" => {
+          ...prevDimensions,
+          padding_bottom: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_left" => {
+          ...prevDimensions,
+          padding_left: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_right" => {
+          ...prevDimensions,
+          padding_right: validatedValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_top_unit" => {
+          ...prevDimensions,
+          margin_top_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_bottom_unit" => {
+          ...prevDimensions,
+          margin_bottom_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_left_unit" => {
+          ...prevDimensions,
+          margin_left_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "margin_right_unit" => {
+          ...prevDimensions,
+          margin_right_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_top_unit" => {
+          ...prevDimensions,
+          padding_top_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_bottom_unit" => {
+          ...prevDimensions,
+          padding_bottom_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_left_unit" => {
+          ...prevDimensions,
+          padding_left_unit: newValue,
+          dimension_type: dimension_type,
+        }
+      | "padding_right_unit" => {
+          ...prevDimensions,
+          padding_right_unit: newValue,
+          dimension_type: dimension_type,
+        }
+
       | _ => prevDimensions
       }
     )
@@ -153,7 +229,8 @@ module DimensionHandlers = {
     ~setDimensions,
     dimension_type,
   ) => {
-    let value = newValue === "" ? "auto" : newValue
+    let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
+    let value = validatedValue === "" ? "auto" : validatedValue
 
     setDimensions(prevDimensions =>
       switch key {
@@ -285,15 +362,6 @@ module MarginSelector = {
   let make = () => {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
     let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
-
-    let handleChange = (~key: string, ~newValue: string) => {
-      setCurrentRow(prevDimensions => {
-        ...currentRow,
-        dimension_type: "margin",
-      })
-
-      None
-    }
 
     Js.log(currentRow)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
