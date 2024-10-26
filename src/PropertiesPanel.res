@@ -77,6 +77,7 @@ module DimensionHandlers = {
     padding_bottom_unit: string,
     padding_left_unit: string,
     padding_right_unit: string,
+    dimension_type: string,
   } // Type of the data returned by the /dimensions endpoint
 
   let createInitialServerState = () => {
@@ -97,6 +98,7 @@ module DimensionHandlers = {
     padding_bottom_unit: "px",
     padding_left_unit: "px",
     padding_right_unit: "px",
+    dimension_type: "margin",
   }
 
   type dimensions = {
@@ -284,6 +286,15 @@ module MarginSelector = {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
     let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
+    let handleChange = (~key: string, ~newValue: string) => {
+      setCurrentRow(prevDimensions => {
+        ...currentRow,
+        dimension_type: "margin",
+      })
+
+      None
+    }
+
     Js.log(currentRow)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
     // let (serverDimensions, setServerDimensions) = React.useState(
@@ -319,7 +330,48 @@ module MarginSelector = {
     //     ~dimension_type="margin",
     //   )
 
-    <fieldset className="MarginSelector-container" />
+    //  <fieldset className="MarginSelector-container">
+    //       <div className="MarginSelector-subwrapper">
+    //         <div className="Dimension-centered">
+    //           <DimensionInput
+    //             value={margin.top}
+    //             unit={margin.top_unit}
+    //             onBlur={handleBlur}
+    //             onChange={handleChange}
+    //             onUnitChange={handleUnitChange}
+    //             dimensionKey="top"
+    //           />
+    //         </div>
+    //         <div className="Selector-row">
+    //           <DimensionInput
+    //             value={margin.left}
+    //             unit={margin.left_unit}
+    //             onBlur={handleBlur}
+    //             onChange={handleChange}
+    //             onUnitChange={handleUnitChange}
+    //             dimensionKey="left"
+    //           />
+    //           <DimensionInput
+    //             value={margin.right}
+    //             unit={margin.right_unit}
+    //             onBlur={handleBlur}
+    //             onChange={handleChange}
+    //             onUnitChange={handleUnitChange}
+    //             dimensionKey="right"
+    //           />
+    //         </div>
+    //         <div className="Dimension-centered">
+    //           <DimensionInput
+    //             value={margin.bottom}
+    //             unit={margin.bottom_unit}
+    //             onBlur={handleBlur}
+    //             onChange={handleChange}
+    //             onUnitChange={handleUnitChange}
+    //             dimensionKey="bottom"
+    //           />
+    //         </div>
+    //         <PaddingSelector serverDimensions setServerDimensions />
+    //       </div>
   }
 }
 
@@ -355,7 +407,46 @@ module PaddingSelector = {
     //     ~dimension_type="padding",
     //   )
 
-    <fieldset className="PaddingSelector-container" />
+    // <fieldset className="PaddingSelector-container">
+    //   <div className="Dimension-centered">
+    //     <DimensionInput
+    //       value={padding.top}
+    //       unit={padding.top_unit}
+    //       onBlur={handleBlur}
+    //       onChange={handleChange}
+    //       onUnitChange={handleUnitChange}
+    //       dimensionKey="top"
+    //     />
+    //   </div>
+    //   <div className="Selector-row">
+    //     <DimensionInput
+    //       value={padding.left}
+    //       unit={padding.left_unit}
+    //       onBlur={handleBlur}
+    //       onChange={handleChange}
+    //       onUnitChange={handleUnitChange}
+    //       dimensionKey="left"
+    //     />
+    //     <DimensionInput
+    //       value={padding.right}
+    //       unit={padding.right_unit}
+    //       onBlur={handleBlur}
+    //       onChange={handleChange}
+    //       onUnitChange={handleUnitChange}
+    //       dimensionKey="right"
+    //     />
+    //   </div>
+    //   <div className="Dimension-centered">
+    //     <DimensionInput
+    //       value={padding.bottom}
+    //       unit={padding.bottom_unit}
+    //       onBlur={handleBlur}
+    //       onChange={handleChange}
+    //       onUnitChange={handleUnitChange}
+    //       dimensionKey="bottom"
+    //     />
+    //   </div>
+    // </fieldset>
   }
 }
 
