@@ -370,75 +370,50 @@ module MarginSelector = {
 module PaddingSelector = {
   type padding = DimensionHandlers.dimensions
   @react.component
-  let make = (~serverDimensions, ~setServerDimensions) => {
-    let (padding, setPadding) = React.useState(() => DimensionHandlers.createInitialState())
+  let make = () => {
+    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
-    // let handleChange = (~key: string, ~newValue: string) =>
-    //   DimensionHandlers.handleChange(
-    //     ~key,
-    //     ~newValue,
-    //     ~dimensions=padding,
-    //     ~setDimensions=setPadding,
-    //     ~dimension_type="padding",
-    //   )
+    let handleChange = (~key: string, ~newValue: string) => {
+      DimensionHandlers.handleChange(
+        ~key,
+        ~newValue,
+        ~setDimensions=setCurrentRow,
+        ~dimension_type="padding",
+      )
+    }
 
-    // let handleBlur = (~key: string, ~newValue: string) =>
-    //   DimensionHandlers.handleBlur(
-    //     ~key,
-    //     ~newValue,
-    //     ~dimensions=padding,
-    //     ~setDimensions=setPadding,
-    //     ~dimension_type="padding",
-    //   )
-
-    // let handleUnitChange = (~key: string) =>
-    //   DimensionHandlers.handleUnitChange(
-    //     ~key,
-    //     ~dimensions=padding,
-    //     ~setDimensions=setPadding,
-    //     ~dimension_type="padding",
-    //   )
-
-    // <fieldset className="PaddingSelector-container">
-    //   <div className="Dimension-centered">
-    //     <DimensionInput
-    //       value={padding.top}
-    //       unit={padding.top_unit}
-    //       onBlur={handleBlur}
-    //       onChange={handleChange}
-    //       onUnitChange={handleUnitChange}
-    //       dimensionKey="top"
-    //     />
-    //   </div>
-    //   <div className="Selector-row">
-    //     <DimensionInput
-    //       value={padding.left}
-    //       unit={padding.left_unit}
-    //       onBlur={handleBlur}
-    //       onChange={handleChange}
-    //       onUnitChange={handleUnitChange}
-    //       dimensionKey="left"
-    //     />
-    //     <DimensionInput
-    //       value={padding.right}
-    //       unit={padding.right_unit}
-    //       onBlur={handleBlur}
-    //       onChange={handleChange}
-    //       onUnitChange={handleUnitChange}
-    //       dimensionKey="right"
-    //     />
-    //   </div>
-    //   <div className="Dimension-centered">
-    //     <DimensionInput
-    //       value={padding.bottom}
-    //       unit={padding.bottom_unit}
-    //       onBlur={handleBlur}
-    //       onChange={handleChange}
-    //       onUnitChange={handleUnitChange}
-    //       dimensionKey="bottom"
-    //     />
-    //   </div>
-    // </fieldset>
+    <div className="PaddingSelector-container">
+      <div className="Dimension-centered">
+        <DimensionInput
+          value={currentRow.padding_top}
+          unit={currentRow.padding_top_unit}
+          onChange={handleChange}
+          dimensionKey="padding_top"
+        />
+      </div>
+      <div className="Selector-row">
+        <DimensionInput
+          value={currentRow.padding_left}
+          unit={currentRow.padding_left_unit}
+          onChange={handleChange}
+          dimensionKey="padding_left"
+        />
+        <DimensionInput
+          value={currentRow.padding_right}
+          unit={currentRow.padding_right_unit}
+          onChange={handleChange}
+          dimensionKey="padding_right"
+        />
+      </div>
+      <div className="Dimension-centered">
+        <DimensionInput
+          value={currentRow.padding_bottom}
+          unit={currentRow.padding_bottom_unit}
+          onChange={handleChange}
+          dimensionKey="padding_bottom"
+        />
+      </div>
+    </div>
   }
 }
 
