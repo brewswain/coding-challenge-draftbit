@@ -1,5 +1,3 @@
-open Belt
-
 %raw(`require("./PropertiesPanel.css")`)
 %raw(`require("./index.css")`)
 
@@ -220,12 +218,11 @@ module DimensionHandlers = {
 }
 
 // I Elected to keep everything in a monolithic file for ease of demonstration.
-// Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel.
+// Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel in Rescript.
 module DimensionContext = {
   type server_dimension_context = {
     currentRow: DimensionHandlers.serverDimension,
     setCurrentRow: (DimensionHandlers.serverDimension => DimensionHandlers.serverDimension) => unit,
-    // updateColumn: (~key: string, ~newValue: string) => void,
   }
 
   let context = React.createContext(
@@ -249,14 +246,7 @@ module DimensionContext = {
 
 module DimensionInput = {
   @react.component
-  let make = (
-    ~value,
-    // ~onBlur,
-    ~unit,
-    ~onChange,
-    // ~onUnitChange,
-    ~dimensionKey,
-  ) => {
+  let make = (~value, ~unit, ~onChange, ~dimensionKey) => {
     let (isFocused, setIsFocused) = React.useState(() => false)
 
     // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could/should be a very concise solution.
@@ -298,7 +288,7 @@ module DimensionInput = {
         onKeyDown={handleKeyDown}
       />
       {
-        // Causes some  Layout shift, can solve this with opacity or by placing the button in the input, but judged this wasn't a showstopper for a demo. Also, the actual UI's a bit off but just wanted an approximation since the functionality was more the focus.
+        // Since I chose to only use 2 possible units, this button flow was chosen. Otherwise, if more formats were expected, a dropdown/select would work better.
         isFocused || value !== "auto"
           ? <button
               className="Dimension-button"
@@ -315,7 +305,6 @@ module DimensionInput = {
 
 // Expect UI for this and MarginSelector to be slightly janky but functional
 module PaddingSelector = {
-  type padding = DimensionHandlers.dimensions
   @react.component
   let make = () => {
     let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
