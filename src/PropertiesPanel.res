@@ -81,18 +81,18 @@ module DimensionHandlers = {
 
   let createInitialServerState = () => {
     id: "0",
-    margin_top: "string",
-    margin_bottom: "string",
-    margin_left: "string",
-    margin_right: "string",
+    margin_top: "auto",
+    margin_bottom: "auto",
+    margin_left: "auto",
+    margin_right: "auto",
     margin_top_unit: "px",
     margin_bottom_unit: "px",
     margin_left_unit: "px",
     margin_right_unit: "px",
-    padding_top: "string",
-    padding_bottom: "string",
-    padding_left: "string",
-    padding_right: "string",
+    padding_top: "auto",
+    padding_bottom: "auto",
+    padding_left: "auto",
+    padding_right: "auto",
     padding_top_unit: "px",
     padding_bottom_unit: "px",
     padding_left_unit: "px",
@@ -221,22 +221,6 @@ module DimensionContext = {
     }
   }
 }
-module ServerDimensionProvider = {
-  @react.component
-  let make = (~children) => {
-    let (currentRowState, setCurrentRowState) = React.useState(() =>
-      DimensionHandlers.createInitialServerState()
-    )
-
-    <DimensionContext.Provider
-      value={
-        DimensionContext.currentRow: currentRowState,
-        DimensionContext.setCurrentRow: setCurrentRowState,
-      }>
-      {children}
-    </DimensionContext.Provider>
-  }
-}
 
 module DimensionInput = {
   @react.component
@@ -298,9 +282,9 @@ module MarginSelector = {
   @react.component
   let make = () => {
     let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
-    let test = React.useContext(DimensionContext.context)
+    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
-    Js.log(test)
+    Js.log(currentRow)
     // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
     // let (serverDimensions, setServerDimensions) = React.useState(
     //   DimensionHandlers.createInitialState(),
@@ -377,11 +361,18 @@ module PaddingSelector = {
 
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
+  let (currentRowState, setCurrentRowState) = React.useState(() =>
+    DimensionHandlers.createInitialServerState()
+  )
   <aside className="PropertiesPanel">
-    <ServerDimensionProvider>
+    <DimensionContext.Provider
+      value={
+        DimensionContext.currentRow: currentRowState,
+        DimensionContext.setCurrentRow: setCurrentRowState,
+      }>
       <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
       <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
-    </ServerDimensionProvider>
+    </DimensionContext.Provider>
   </aside>
 }
