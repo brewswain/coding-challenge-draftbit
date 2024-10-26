@@ -125,20 +125,19 @@ module DimensionHandlers = {
     dimension_type: "padding",
   }
 
-  let handleChange = (
-    ~key: string,
-    ~newValue: string,
-    ~dimensions,
-    ~setDimensions,
-    ~dimension_type,
-  ) => {
+  let handleChange = (~key: string, ~newValue: string, ~setDimensions, ~dimension_type) => {
     // Naive validation to prevent the user from entering a number greater than 9999
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
+
+    Js.log([newValue, validatedValue, key])
+
+    // Verbose Switch statement to handle each key. I'm sure there's a more elegant way to do this.
     setDimensions(prevDimensions =>
       switch key {
       | "margin_top" => {
           ...prevDimensions,
           margin_top: validatedValue,
+          dimension_type: dimension_type,
         }
       | "margin_bottom" => {
           ...prevDimensions,
@@ -220,57 +219,6 @@ module DimensionHandlers = {
       }
     )
   }
-
-  // Semi-hacky way to ensure that our blank input only reverts to "auto" when the user clicks away from it. If I did it in handleChange, it would revert to "auto" on every keystroke when the input is blank. Also, Placing api calls to our handleBlur manager helps prevent needless db operations.
-  let handleBlur = (
-    ~key: string,
-    ~newValue: string,
-    ~dimensions,
-    ~setDimensions,
-    dimension_type,
-  ) => {
-    let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
-    let value = validatedValue === "" ? "auto" : validatedValue
-
-    setDimensions(prevDimensions =>
-      switch key {
-      | "top" => {...prevDimensions, top: value, dimension_type: dimension_type}
-      | "bottom" => {...prevDimensions, bottom: value, dimension_type: dimension_type}
-      | "left" => {...prevDimensions, left: value, dimension_type: dimension_type}
-      | "right" => {...prevDimensions, right: value, dimension_type: dimension_type}
-      | _ => prevDimensions
-      }
-    )
-  }
-
-  // purposefully only accepts px or % , if more formats were used this would change from a button to a dropdown
-  let handleUnitChange = (~key: string, ~dimensions, ~setDimensions, dimension_type) => {
-    setDimensions(prevDimensions =>
-      switch key {
-      | "top" => {
-          ...prevDimensions,
-          top_unit: prevDimensions.top_unit === "px" ? "%" : "px",
-          dimension_type: dimension_type,
-        }
-      | "bottom" => {
-          ...prevDimensions,
-          bottom_unit: prevDimensions.bottom_unit === "px" ? "%" : "px",
-          dimension_type: dimension_type,
-        }
-      | "left" => {
-          ...prevDimensions,
-          left_unit: prevDimensions.left_unit === "px" ? "%" : "px",
-          dimension_type: dimension_type,
-        }
-      | "right" => {
-          ...prevDimensions,
-          right_unit: prevDimensions.right_unit === "px" ? "%" : "px",
-          dimension_type: dimension_type,
-        }
-      | _ => prevDimensions
-      }
-    )
-  }
 }
 
 // I Elected to keep everything in a monolithic file for ease of demonstration.
@@ -303,7 +251,14 @@ module DimensionContext = {
 
 module DimensionInput = {
   @react.component
-  let make = (~value, ~onBlur, ~unit, ~onChange, ~onUnitChange, ~dimensionKey) => {
+  let make = (
+    ~value,
+    // ~onBlur,
+    ~unit,
+    ~onChange,
+    // ~onUnitChange,
+    ~dimensionKey,
+  ) => {
     let (isFocused, setIsFocused) = React.useState(() => false)
 
     // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could/should be a very concise solution.
@@ -335,7 +290,9 @@ module DimensionInput = {
           input["select"](.)
         }}
         onBlur={event => {
-          onBlur(~key=dimensionKey, ~newValue=ReactEvent.Focus.target(event)["value"])
+          let targetValue = ReactEvent.Focus.target(event)["value"]
+          let value = targetValue === "" ? "auto" : targetValue
+          onChange(~key=dimensionKey, ~newValue=value)
         }}
         value
         onChange={event =>
@@ -348,7 +305,8 @@ module DimensionInput = {
           ? <button
               className="Dimension-button"
               disabled={!isFocused}
-              onClick={_ => onUnitChange(~key=dimensionKey)}>
+              onClick={_ =>
+                onChange(~key=dimensionKey ++ "_unit", ~newValue=unit === "px" ? "%" : "px")}>
               {unit->React.string}
             </button>
           : React.null
@@ -360,86 +318,52 @@ module DimensionInput = {
 module MarginSelector = {
   @react.component
   let make = () => {
-    let (margin, setMargin) = React.useState(() => DimensionHandlers.createInitialState())
     let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
-    Js.log(currentRow)
-    // Elected to do one layer of state being sent as props due to the fact that this data will only go one child deep. However, if this were in a more complex tree, I would consider using a more comprehensive state management solution like  zustand, context, reduxv etc. This would also work more hand in hand with authentication in production level project, since we'd be able to easily track our current project.
-    // let (serverDimensions, setServerDimensions) = React.useState(
-    //   DimensionHandlers.createInitialState(),
-    // )
+    let handleChange = (~key: string, ~newValue: string) => {
+      DimensionHandlers.handleChange(
+        ~key,
+        ~newValue,
+        ~setDimensions=setCurrentRow,
+        ~dimension_type="margin",
+      )
+    }
 
-    // let handleChange = (~key: string, ~newValue: string) => {
-    //   Js.log("handleChange")
-    //   DimensionHandlers.handleChange(
-    //     ~key,
-    //     ~newValue,
-    //     ~dimensions=margin,
-    //     ~setDimensions=setMargin,
-    //     ~dimension_type="margin",
-    //   )
-    // }
-
-    // let handleBlur = (~key: string, ~newValue: string) => {
-    //   DimensionHandlers.handleBlur(
-    //     ~key,
-    //     ~newValue,
-    //     ~dimensions=margin,
-    //     ~setDimensions=setMargin,
-    //     ~dimension_type="margin",
-    //   )
-    // }
-
-    // let handleUnitChange = (~key: string) =>
-    //   DimensionHandlers.handleUnitChange(
-    //     ~key,
-    //     ~dimensions=margin,
-    //     ~setDimensions=setMargin,
-    //     ~dimension_type="margin",
-    //   )
-
-    //  <fieldset className="MarginSelector-container">
-    //       <div className="MarginSelector-subwrapper">
-    //         <div className="Dimension-centered">
-    //           <DimensionInput
-    //             value={margin.top}
-    //             unit={margin.top_unit}
-    //             onBlur={handleBlur}
-    //             onChange={handleChange}
-    //             onUnitChange={handleUnitChange}
-    //             dimensionKey="top"
-    //           />
-    //         </div>
-    //         <div className="Selector-row">
-    //           <DimensionInput
-    //             value={margin.left}
-    //             unit={margin.left_unit}
-    //             onBlur={handleBlur}
-    //             onChange={handleChange}
-    //             onUnitChange={handleUnitChange}
-    //             dimensionKey="left"
-    //           />
-    //           <DimensionInput
-    //             value={margin.right}
-    //             unit={margin.right_unit}
-    //             onBlur={handleBlur}
-    //             onChange={handleChange}
-    //             onUnitChange={handleUnitChange}
-    //             dimensionKey="right"
-    //           />
-    //         </div>
-    //         <div className="Dimension-centered">
-    //           <DimensionInput
-    //             value={margin.bottom}
-    //             unit={margin.bottom_unit}
-    //             onBlur={handleBlur}
-    //             onChange={handleChange}
-    //             onUnitChange={handleUnitChange}
-    //             dimensionKey="bottom"
-    //           />
-    //         </div>
-    //         <PaddingSelector serverDimensions setServerDimensions />
-    //       </div>
+    <div className="MarginSelector-container">
+      <div className="MarginSelector-subwrapper">
+        <div className="Dimension-centered">
+          <DimensionInput
+            value={currentRow.margin_top}
+            unit={currentRow.margin_top_unit}
+            onChange={handleChange}
+            dimensionKey="margin_top"
+          />
+        </div>
+        <div className="Selector-row">
+          <DimensionInput
+            value={currentRow.margin_left}
+            unit={currentRow.margin_left_unit}
+            onChange={handleChange}
+            dimensionKey="margin_left"
+          />
+          <DimensionInput
+            value={currentRow.margin_right}
+            unit={currentRow.margin_right_unit}
+            onChange={handleChange}
+            dimensionKey="margin_right"
+          />
+        </div>
+        <div className="Dimension-centered">
+          <DimensionInput
+            value={currentRow.margin_bottom}
+            unit={currentRow.margin_bottom_unit}
+            onChange={handleChange}
+            dimensionKey="margin_bottom"
+          />
+        </div>
+        // <PaddingSelector serverDimensions setServerDimensions />
+      </div>
+    </div>
   }
 }
 
@@ -523,6 +447,12 @@ let make = () => {
   let (currentRowState, setCurrentRowState) = React.useState(() =>
     DimensionHandlers.createInitialServerState()
   )
+
+  React.useEffect1(() => {
+    Js.log(currentRowState)
+    None
+  }, [currentRowState])
+
   <aside className="PropertiesPanel">
     <DimensionContext.Provider
       value={
