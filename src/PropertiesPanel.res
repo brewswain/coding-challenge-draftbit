@@ -129,8 +129,6 @@ module DimensionHandlers = {
     // Naive validation to prevent the user from entering a number greater than 9999
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
 
-    Js.log([newValue, validatedValue, key])
-
     // Verbose Switch statement to handle each key. I'm sure there's a more elegant way to do this.
     setDimensions(prevDimensions =>
       switch key {
@@ -315,58 +313,7 @@ module DimensionInput = {
   }
 }
 
-module MarginSelector = {
-  @react.component
-  let make = () => {
-    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
-
-    let handleChange = (~key: string, ~newValue: string) => {
-      DimensionHandlers.handleChange(
-        ~key,
-        ~newValue,
-        ~setDimensions=setCurrentRow,
-        ~dimension_type="margin",
-      )
-    }
-
-    <div className="MarginSelector-container">
-      <div className="MarginSelector-subwrapper">
-        <div className="Dimension-centered">
-          <DimensionInput
-            value={currentRow.margin_top}
-            unit={currentRow.margin_top_unit}
-            onChange={handleChange}
-            dimensionKey="margin_top"
-          />
-        </div>
-        <div className="Selector-row">
-          <DimensionInput
-            value={currentRow.margin_left}
-            unit={currentRow.margin_left_unit}
-            onChange={handleChange}
-            dimensionKey="margin_left"
-          />
-          <DimensionInput
-            value={currentRow.margin_right}
-            unit={currentRow.margin_right_unit}
-            onChange={handleChange}
-            dimensionKey="margin_right"
-          />
-        </div>
-        <div className="Dimension-centered">
-          <DimensionInput
-            value={currentRow.margin_bottom}
-            unit={currentRow.margin_bottom_unit}
-            onChange={handleChange}
-            dimensionKey="margin_bottom"
-          />
-        </div>
-        // <PaddingSelector serverDimensions setServerDimensions />
-      </div>
-    </div>
-  }
-}
-
+// Expect UI for this and MarginSelector to be slightly janky but functional
 module PaddingSelector = {
   type padding = DimensionHandlers.dimensions
   @react.component
@@ -417,16 +364,63 @@ module PaddingSelector = {
   }
 }
 
+module MarginSelector = {
+  @react.component
+  let make = () => {
+    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
+
+    let handleChange = (~key: string, ~newValue: string) => {
+      DimensionHandlers.handleChange(
+        ~key,
+        ~newValue,
+        ~setDimensions=setCurrentRow,
+        ~dimension_type="margin",
+      )
+    }
+
+    <div className="MarginSelector-container">
+      <div className="MarginSelector-subwrapper">
+        <div className="Dimension-centered">
+          <DimensionInput
+            value={currentRow.margin_top}
+            unit={currentRow.margin_top_unit}
+            onChange={handleChange}
+            dimensionKey="margin_top"
+          />
+        </div>
+        <div className="Selector-row">
+          <DimensionInput
+            value={currentRow.margin_left}
+            unit={currentRow.margin_left_unit}
+            onChange={handleChange}
+            dimensionKey="margin_left"
+          />
+          <DimensionInput
+            value={currentRow.margin_right}
+            unit={currentRow.margin_right_unit}
+            onChange={handleChange}
+            dimensionKey="margin_right"
+          />
+        </div>
+        <div className="Dimension-centered">
+          <DimensionInput
+            value={currentRow.margin_bottom}
+            unit={currentRow.margin_bottom_unit}
+            onChange={handleChange}
+            dimensionKey="margin_bottom"
+          />
+        </div>
+        <PaddingSelector />
+      </div>
+    </div>
+  }
+}
+
 @genType @genType.as("PropertiesPanel") @react.component
 let make = () => {
   let (currentRowState, setCurrentRowState) = React.useState(() =>
     DimensionHandlers.createInitialServerState()
   )
-
-  React.useEffect1(() => {
-    Js.log(currentRowState)
-    None
-  }, [currentRowState])
 
   <aside className="PropertiesPanel">
     <DimensionContext.Provider
