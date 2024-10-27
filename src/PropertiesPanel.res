@@ -264,7 +264,7 @@ module DimensionInput = {
         ReactEvent.Keyboard.preventDefault(event)
       }
     }
-    let timeoutId = React.null
+
     <label
       className={`Dimension-input-container ${!isFocused && value !== "auto"
           ? "Dimension-input-container--active"
@@ -283,7 +283,7 @@ module DimensionInput = {
           let input = ReactEvent.Mouse.currentTarget(event)
           input["select"](.)
         }}
-        // Multifunctional -- Firstly, we ensure that a blank input reverts to "auto" on blur, and then we make our API call. The API call being on blur should help reduce unnecessary API calls--I Initially was going to debounce our handleChange for the API call, but this felt like the better choice.
+        // Multifunctional -- Firstly, we ensure that a blank input reverts to "auto" on blur, and then we make our API call.
         onBlur={event => {
           let targetValue = ReactEvent.Focus.target(event)["value"]
           let value = targetValue === "" ? "auto" : targetValue
@@ -302,30 +302,28 @@ module DimensionInput = {
           })
           |> ignore
         }}
+
         value
+
+        // An improvement here would be to debounce our API call to prevent spamming the backend.
         onChange={event => {
-          let targetValue = ReactEvent.Focus.target(event)["value"]
+          let targetValue = ReactEvent.Form.target(event)["value"]
           let value = targetValue === "" ? "auto" : targetValue
           onChange(~key=dimensionKey, ~newValue=value)
 
-          if timeoutId {
-            clearTimeout(timeoutId)
-          }
-
-          let timeoutId = setTimeout(() => {
-            Fetch.mutate(
-              ~new_value=value,
-              ~dimension_key=dimensionKey,
-              ~method="PATCH",
-              `http://localhost:12346/dimensions`,
-            )
-            |> Js.Promise.then_(currentRowJson => {
-              Js.Promise.resolve({
-                setCurrentRow(Obj.magic(currentRowJson))
-              })
+          Fetch.mutate(
+            ~new_value=value,
+            ~dimension_key=dimensionKey,
+            ~method="PATCH",
+            `http://localhost:12346/dimensions`,
+          )
+          |> Js.Promise.then_(currentRowJson => {
+            Js.Promise.resolve({
+              setCurrentRow(Obj.magic(currentRowJson))
             })
-            |> ignore
-          }, 500)
+          })
+          |> ignore
+
           onChange(~key=dimensionKey, ~newValue=value)
         }}
         onKeyDown={handleKeyDown}
