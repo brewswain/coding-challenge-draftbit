@@ -3,7 +3,7 @@ import { Client } from "pg";
 import { backOff } from "exponential-backoff";
 import express from "express";
 import waitOn from "wait-on";
-import { onExit } from "signal-exit";
+import  onExit  from "signal-exit";
 import cors from "cors";
 
 // Add your routes here
@@ -55,6 +55,7 @@ const connect = async (): Promise<Client> => {
   await waitOn({ resources: [resource] });
   console.log("Initializing client");
   const client = new Client();
+
   await client.connect();
   console.log("Connected to database");
 
@@ -70,6 +71,11 @@ const connect = async (): Promise<Client> => {
 const main = async () => {
   const client = await connect();
   const app = setupApp(client);
+   
+  if (!process.env.SERVER_PORT) {
+    throw new Error("SERVER_PORT is not defined");
+  }
+
   const port = parseInt(process.env.SERVER_PORT);
   app.listen(port, () => {
     console.log(
@@ -79,3 +85,4 @@ const main = async () => {
 };
 
 main();
+
