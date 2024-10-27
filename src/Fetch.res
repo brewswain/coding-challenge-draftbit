@@ -47,13 +47,19 @@ let fetchJson = (~headers=Js.Dict.empty(), url: string): Js.Promise.t<Js.Json.t>
     }
   )
 }
-let mutate = (some_int: int, some_text: string, ~method="POST", url: string): Js.Promise.t<
-  Js.Json.t,
-> => {
+let mutate = (
+  ~new_value: string,
+  ~dimension_key: string,
+  ~method="POST",
+  url: string,
+): Js.Promise.t<Js.Json.t> => {
   let body = {
-    "some_int": some_int,
-    "some_text": some_text,
+    // "some_int": some_int,
+    // "some_text": some_text,
+    updated_column: new_value,
+    target_column: dimension_key,
   }
+
   let options = {
     "headers": {"Content-Type": "application/json"},
     "method": method,

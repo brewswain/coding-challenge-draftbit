@@ -30,10 +30,11 @@ module ViewExamples = {
   @react.component
   let make = () => {
     let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
+    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
     // Have multiple calls here to show that the data is in fact being mutated correctly. Demonstration of our
     React.useEffect1(() => {
-      // Fetch the data from /examples and set the state when the promise resolves
+      // Fetch the data from /examples and log state when the promise resolves
       Fetch.fetchJson(`http://localhost:12346/examples`)
       |> Js.Promise.then_(examplesJson => {
         // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
@@ -43,17 +44,46 @@ module ViewExamples = {
       |> ignore
 
       // Mutate our data
-      Fetch.mutate(001, "test", ~method="POST", `http://localhost:12346/examples`)
-      |> Js.Promise.then_(examplesJson => {
+      // Fetch.mutate(001, "test", ~method="POST", `http://localhost:12346/examples`)
+      // |> Js.Promise.then_(examplesJson => {
+      //   Js.Promise.resolve({
+      //     Js.log(examplesJson)
+      //     setExamples(_ => Some(Obj.magic(examplesJson)))
+      //   })
+      // })
+      // |> ignore
+
+      // dimensions block
+
+      // Fetch the data from /dimensions and set the state when the promise resolves
+      Fetch.fetchJson(`http://localhost:12346/dimensions`)
+      |> Js.Promise.then_(currentRowJson => {
+        Js.Promise.resolve(
+          setCurrentRow(_ => {
+            Js.log(currentRowJson)
+            Some(Obj.magic(currentRowJson))
+          }),
+        )
+      })
+      |> ignore
+
+      // Test Mutation
+      Fetch.mutate(
+        ~new_value="1000",
+        ~dimension_key="margin_top",
+        ~method="PUT",
+        `http://localhost:12346/dimensions`,
+      )
+      |> Js.Promise.then_(currentRowJson => {
         Js.Promise.resolve({
-          Js.log(examplesJson)
-          setExamples(_ => Some(Obj.magic(examplesJson)))
+          Js.log(currentRowJson)
+          setCurrentRow(_ => Some(Obj.magic(currentRowJson)))
         })
       })
       |> ignore
 
       None
-    }, [setExamples])
+    }, [setExamples, setCurrentRow])
 
     <div>
       {switch examples {
