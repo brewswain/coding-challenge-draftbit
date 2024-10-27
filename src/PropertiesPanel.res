@@ -1,3 +1,5 @@
+open Belt
+
 %raw(`require("./PropertiesPanel.css")`)
 %raw(`require("./index.css")`)
 
@@ -28,10 +30,19 @@ module ViewExamples = {
   @react.component
   let make = () => {
     let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
-
+let test = {
+  id: 0,
+some_int: 001,
+some_text: "test"
+}
     React.useEffect1(() => {
       // Fetch the data from /examples and set the state when the promise resolves
-      Fetch.fetchJson(`http://localhost:12346/examples`)
+      Fetch.mutate(
+        ~method="POST",
+        ~body=test,
+        `http://localhost:12346/examples`,
+      )
+      |> Js.Promise.then_(Fetch.Response.json)
       |> Js.Promise.then_(examplesJson => {
         // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
         Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
@@ -39,6 +50,14 @@ module ViewExamples = {
       // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
       |> ignore
       None
+      // Fetch.fetchJson(`http://localhost:12346/examples`)
+      // |> Js.Promise.then_(examplesJson => {
+      //   // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
+      //   Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
+      // })
+      // // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
+      // |> ignore
+      // None
     }, [setExamples])
 
     <div>
@@ -52,8 +71,7 @@ module ViewExamples = {
         ->React.array
       }}
     </div>
-  }
-}
+  }}
 
 // Code length became very much an issue when I had separate handlers in both the Padding and Margin Seleector modules, with a bunch of duplicated code. I solved this by Abstracting this logic and baseline state into its own util module. The tradeoff here is that now There's a bit of a clarity issue--This handler doesn't inherently differentiate between padding and margin. To solve this, I added an additional field: dimension_type. We'll use this parameter when making oor API call to determine which columns get updated. Realistically, having separate handlers would have been easier, but I was interested in seeing how I could solve this problem with a bit of abstraction.
 module DimensionHandlers = {

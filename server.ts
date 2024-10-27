@@ -18,9 +18,20 @@ const setupApp = (client: Client): express.Application => {
       const { rows } = await client.query(`SELECT * FROM example_table`);
       res.json(rows);
    });
+   app.post('/examples', async (_req, res) => {
+      const example = _req.body;
+      console.log(example);
+
+      await client.query(
+         `INSERT INTO example_table (name, description) VALUES ($1, $2) WHERE name = $1`,
+         [example.some_int, example.some_str]
+      );
+      console.log(example);
+   });
 
    app.post('/dimensions', async (req, res) => {
       const dimensions = req.body;
+      
       const { rows } = await client.query(
          `INSERT INTO dimensions (name, description) VALUES ($1, $2) RETURNING *`,
          [dimensions.name, dimensions.description]
