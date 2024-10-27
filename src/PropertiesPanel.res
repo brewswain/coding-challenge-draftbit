@@ -283,7 +283,6 @@ module DimensionInput = {
           let input = ReactEvent.Mouse.currentTarget(event)
           input["select"](.)
         }}
-
         // Multifunctional -- Firstly, we ensure that a blank input reverts to "auto" on blur, and then we make our API call. The API call being on blur should help reduce unnecessary API calls--I Initially was going to debounce our handleChange for the API call, but this felt like the better choice.
         onBlur={event => {
           let targetValue = ReactEvent.Focus.target(event)["value"]
@@ -314,28 +313,27 @@ module DimensionInput = {
           ? <button
               className="Dimension-button"
               disabled={!isFocused}
-              onClick={_ =>{
+              onClick={_ => {
                 let toggledUnit = unit === "px" ? "%" : "px"
                 let unitDimensionKey = dimensionKey ++ "_unit"
                 Fetch.mutate(
-                              ~new_value=toggledUnit,
-            ~dimension_key=unitDimensionKey,
-            ~method="PATCH",
-            `http://localhost:12346/dimensions`,
-          )
-          |> Js.Promise.then_(currentRowJson => {
-            Js.Promise.resolve({
-              setCurrentRow(Obj.magic(currentRowJson))
-            })
-          })
-          |> ignore
-                onChange(~key=unitDimensionKey, ~newValue=toggledUnit)}
-                
-                }
-                
-                >
+                  ~new_value=toggledUnit,
+                  ~dimension_key=unitDimensionKey,
+                  ~method="PATCH",
+                  `http://localhost:12346/dimensions`,
+                )
+                |> Js.Promise.then_(currentRowJson => {
+                  Js.Promise.resolve({
+                    setCurrentRow(Obj.magic(currentRowJson))
+                  })
+                })
+                |> ignore
+                onChange(~key=unitDimensionKey, ~newValue=toggledUnit)
+            
+
+              }
+              }>
               {unit->React.string}
-              
             </button>
           : React.null
       }
@@ -395,24 +393,21 @@ module PaddingSelector = {
 
 module MarginSelector = {
   @react.component
-  
-
   let make = () => {
+    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
 
-    let {currentRow,setCurrentRow} = React.useContext(DimensionContext.context)
-
-  React.useEffect1(() => {
-    // Fetch the data from /dimensions and set the state when the promise resolves
-    Fetch.fetchJson(`http://localhost:12346/dimensions`)
-    |> Js.Promise.then_(currentRowJson => {
-      Js.Promise.resolve({
-        setCurrentRow(Obj.magic(currentRowJson))
+    React.useEffect1(() => {
+      // Fetch the data from /dimensions and set the state when the promise resolves
+      Fetch.fetchJson(`http://localhost:12346/dimensions`)
+      |> Js.Promise.then_(currentRowJson => {
+        Js.Promise.resolve({
+          setCurrentRow(Obj.magic(currentRowJson))
+        })
       })
-    })
-    |> ignore
+      |> ignore
 
-    None
-  }, [setCurrentRow])
+      None
+    }, [setCurrentRow])
 
     let handleChange = (~key: string, ~newValue: string) => {
       DimensionHandlers.handleChange(
