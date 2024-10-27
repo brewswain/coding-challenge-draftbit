@@ -53,15 +53,22 @@ Js.Promise.t<Js.Json.t> => {
   )
 }
 let mutate = (
-  ~method="POST",
-  ~headers=Js.Dict.empty(),
-  ~body=Js.Dict.empty(),
+  // ~method="POST",
+  // ~headers=Js.Dict.empty(),
+  // ~body=Js.Dict.empty(),
+  some_int: int,
+  some_text: string,
   url: string,
 ): Js.Promise.t<Js.Json.t> => {
+  let body = {
+    "some_int": some_int,
+    "some_text": some_text,
+  }
   let options = {
-    "headers": headers,
-    "method": method,
-    "body": Js.Json.stringifyAny(body),
+    // "headers": headers,
+    "method": "POST",
+    "body": body,
+    // "body": Js.Json.stringifyAny(body),
   }
   fetch(url, options) |> Js.Promise.then_(res =>
     if !Response.ok(res) {
