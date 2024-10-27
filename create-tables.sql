@@ -3,6 +3,7 @@
 CREATE TABLE example_table (id SERIAL PRIMARY KEY, some_int INT, some_text TEXT);
 INSERT INTO example_table (some_int, some_text) VALUES (123, 'hello');
 
+
 CREATE TABLE dimensions (
   id SERIAL PRIMARY KEY,
   margin_top TEXT,
@@ -22,3 +23,20 @@ CREATE TABLE dimensions (
   padding_left_unit TEXT,
   padding_right_unit TEXT
 );
+-- Since this demo assumes only one set of dimensions, we'll pre-make a single row. Otherwise, we'd just make an api call to create a new row.
+INSERT INTO dimensions (margin_top,
+  margin_bottom,
+  margin_left,
+  margin_right,
+  margin_top_unit,
+  margin_bottom_unit,
+  margin_left_unit,
+  margin_right_unit,
+  padding_top,
+  padding_bottom,
+  padding_left,
+  padding_right,
+  padding_top_unit,
+  padding_bottom_unit,
+  padding_left_unit,
+  padding_right_unit ) VALUES ('auto', 'auto', 'auto', 'auto', 'px', 'px', 'px', 'px', 'auto', 'auto', 'auto', 'auto', 'px', 'px', 'px', 'px');

@@ -3,7 +3,7 @@ import { Client } from "pg";
 import { backOff } from "exponential-backoff";
 import express from "express";
 import waitOn from "wait-on";
-import  onExit  from "signal-exit";
+import onExit from "signal-exit";
 import cors from "cors";
 
 // Add your routes here
@@ -18,26 +18,26 @@ const setupApp = (client: Client): express.Application => {
     const { rows } = await client.query(`SELECT * FROM example_table`);
     res.json(rows);
   });
-  app.post("/examples", async (req, res) => {
-    const example = req.body;
+//   app.post("/examples", async (req, res) => {
+//     const example = req.body;
 
-    const { rows } = await client.query(
-      `UPDATE example_table SET some_int = $1, some_text = $2 WHERE id = 1 RETURNING *`,
-      [example.some_int, example.some_text]
-    );
+//     const { rows } = await client.query(
+//       `UPDATE example_table SET some_int = $1, some_text = $2 WHERE id = 1 RETURNING *`,
+//       [example.some_int, example.some_text]
+//     );
 
-    res.json(rows);
-  });
+//     res.json(rows);
+//   });
 
-  app.patch("/dimensions", async (req, res) => {
-    const dimensions = req.body;
+//   app.patch("/dimensions", async (req, res) => {
+//     const dimensions = req.body;
 
-    const { rows } = await client.query(
-      `INSERT INTO dimensions (name, description) VALUES ($1, $2) RETURNING *`,
-      [dimensions.name, dimensions.description]
-    ); // fix this to match the database
-    res.json(rows);
-  });
+//     const { rows } = await client.query(
+//       `INSERT INTO dimensions (name, description) VALUES ($1, $2) RETURNING *`,
+//       [dimensions.name, dimensions.description]
+//     ); // fix this to match the database
+//     res.json(rows);
+//   });
 
   app.get("/dimensions", async (_req, res) => {
     const { rows } = await client.query(`SELECT * FROM dimensions`);

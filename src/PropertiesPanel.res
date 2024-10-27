@@ -17,88 +17,6 @@ module Collapsible = {
   }
 }
 
-// This component provides a simplified example of fetching JSON data from
-// the backend and rendering it on the screen.
-module ViewExamples = {
-  // Type of the data returned by the /examples endpoint
-  type example = {
-    id: int,
-    some_int: int,
-    some_text: string,
-  }
-
-  @react.component
-  let make = () => {
-    let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
-    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
-
-    // Have multiple calls here to show that the data is in fact being mutated correctly. Demonstration of our
-    React.useEffect1(() => {
-      // Fetch the data from /examples and log state when the promise resolves
-      Fetch.fetchJson(`http://localhost:12346/examples`)
-      |> Js.Promise.then_(examplesJson => {
-        // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
-        Js.Promise.resolve(Js.log(examplesJson))
-      })
-      // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
-      |> ignore
-
-      // Mutate our data
-      // Fetch.mutate(001, "test", ~method="POST", `http://localhost:12346/examples`)
-      // |> Js.Promise.then_(examplesJson => {
-      //   Js.Promise.resolve({
-      //     Js.log(examplesJson)
-      //     setExamples(_ => Some(Obj.magic(examplesJson)))
-      //   })
-      // })
-      // |> ignore
-
-      // dimensions block
-
-      // Fetch the data from /dimensions and set the state when the promise resolves
-      Fetch.fetchJson(`http://localhost:12346/dimensions`)
-      |> Js.Promise.then_(currentRowJson => {
-        Js.Promise.resolve(
-          setCurrentRow(_ => {
-            Js.log(currentRowJson)
-            Some(Obj.magic(currentRowJson))
-          }),
-        )
-      })
-      |> ignore
-
-      // Test Mutation
-      Fetch.mutate(
-        ~new_value="1000",
-        ~dimension_key="margin_top",
-        ~method="PUT",
-        `http://localhost:12346/dimensions`,
-      )
-      |> Js.Promise.then_(currentRowJson => {
-        Js.Promise.resolve({
-          Js.log(currentRowJson)
-          setCurrentRow(_ => Some(Obj.magic(currentRowJson)))
-        })
-      })
-      |> ignore
-
-      None
-    }, [setExamples, setCurrentRow])
-
-    <div>
-      {switch examples {
-      | None => React.string("Loading examples....")
-      | Some(examples) =>
-        examples
-        ->Js.Array2.map(example =>
-          React.string(`Int: ${example.some_int->Js.Int.toString}, Str: ${example.some_text}`)
-        )
-        ->React.array
-      }}
-    </div>
-  }
-}
-
 // Code length became very much an issue when I had separate handlers in both the Padding and Margin Seleector modules, with a bunch of duplicated code. I solved this by Abstracting this logic and baseline state into its own util module. The tradeoff here is that now There's a bit of a clarity issue--This handler doesn't inherently differentiate between padding and margin. To solve this, I added an additional field: dimension_type. We'll use this parameter when making oor API call to determine which columns get updated. Realistically, having separate handlers would have been easier, but I was interested in seeing how I could solve this problem with a bit of abstraction.
 module DimensionHandlers = {
   type serverDimension = {
@@ -261,6 +179,7 @@ module DimensionHandlers = {
   }
 }
 
+
 // I Elected to keep everything in a monolithic file for ease of demonstration.
 // Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel in Rescript.
 module DimensionContext = {
@@ -287,6 +206,95 @@ module DimensionContext = {
     }
   }
 }
+
+// This component provides a simplified example of fetching JSON data from
+// the backend and rendering it on the screen.
+module ViewExamples = {
+  // Type of the data returned by the /examples endpoint
+  type example = {
+    id: int,
+    some_int: int,
+    some_text: string,
+  }
+
+  @react.component
+  let make = () => {
+    let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
+    let { setCurrentRow} = React.useContext(DimensionContext.context)
+
+    // Have multiple calls here to show that the data is in fact being mutated correctly. Demonstration of our
+    React.useEffect1(() => {
+      // Fetch the data from /examples and log state when the promise resolves
+      Fetch.fetchJson(`http://localhost:12346/examples`)
+      |> Js.Promise.then_(examplesJson => {
+        // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
+        Js.Promise.resolve({
+          
+          Js.log(examplesJson)
+          setExamples(_ => Some(Obj.magic(examplesJson)))
+        })
+      })
+      // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
+      |> ignore
+
+      // Mutate our data
+      // Fetch.mutate(001, "test", ~method="POST", `http://localhost:12346/examples`)
+      // |> Js.Promise.then_(examplesJson => {
+      //   Js.Promise.resolve({
+      //     Js.log(examplesJson)
+      //     setExamples(_ => Some(Obj.magic(examplesJson)))
+      //   })
+      // })
+      // |> ignore
+
+      // dimensions block
+
+      // Fetch the data from /dimensions and set the state when the promise resolves
+      // Fetch.fetchJson(`http://localhost:12346/dimensions`)
+      // |> Js.Promise.then_(currentRowJson => {
+      //   Js.Promise.resolve(
+      //   { 
+      //                 Js.log(currentRowJson)
+      //      setCurrentRow(Obj.magic(currentRowJson))
+      //     }
+      //   )
+      // })
+      // |> ignore
+
+      // // Test Mutation
+      // Fetch.mutate(
+      //   ~new_value="1000",
+      //   ~dimension_key="margin_top",
+      //   ~method="PATCH",
+      //   `http://localhost:12346/dimensions`,
+      // )
+      // |> Js.Promise.then_(currentRowJson => {
+      //   Js.Promise.resolve({
+      //     Js.log(currentRowJson)
+      //     setCurrentRow(Obj.magic(currentRowJson))
+      //   })
+      // })
+      // |> ignore
+
+      None
+    }, [setExamples])
+
+    <div>
+      {switch examples {
+      | None => React.string("Loading examples....")
+      | Some(examples) =>
+        examples
+        ->Js.Array2.map(example =>
+          React.string(`Int: ${example.some_int->Js.Int.toString}, Str: ${example.some_text}`)
+        )
+        ->React.array
+      }}
+    </div>
+  }
+}
+
+
+
 
 module DimensionInput = {
   @react.component

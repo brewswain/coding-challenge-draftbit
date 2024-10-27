@@ -56,8 +56,8 @@ let mutate = (
   let body = {
     // "some_int": some_int,
     // "some_text": some_text,
-    updated_column: new_value,
-    target_column: dimension_key,
+    "updated_column": new_value,
+    "target_column": dimension_key,
   }
 
   let options = {
