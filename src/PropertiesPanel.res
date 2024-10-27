@@ -264,7 +264,7 @@ module DimensionInput = {
         ReactEvent.Keyboard.preventDefault(event)
       }
     }
-
+    let timeoutId = React.null
     <label
       className={`Dimension-input-container ${!isFocused && value !== "auto"
           ? "Dimension-input-container--active"
@@ -303,8 +303,31 @@ module DimensionInput = {
           |> ignore
         }}
         value
-        onChange={event =>
-          onChange(~key=dimensionKey, ~newValue=ReactEvent.Form.target(event)["value"])}
+        onChange={event => {
+          let targetValue = ReactEvent.Focus.target(event)["value"]
+          let value = targetValue === "" ? "auto" : targetValue
+          onChange(~key=dimensionKey, ~newValue=value)
+
+          if timeoutId {
+            clearTimeout(timeoutId)
+          }
+
+          let timeoutId = setTimeout(() => {
+            Fetch.mutate(
+              ~new_value=value,
+              ~dimension_key=dimensionKey,
+              ~method="PATCH",
+              `http://localhost:12346/dimensions`,
+            )
+            |> Js.Promise.then_(currentRowJson => {
+              Js.Promise.resolve({
+                setCurrentRow(Obj.magic(currentRowJson))
+              })
+            })
+            |> ignore
+          }, 500)
+          onChange(~key=dimensionKey, ~newValue=value)
+        }}
         onKeyDown={handleKeyDown}
       />
       {
@@ -329,10 +352,7 @@ module DimensionInput = {
                 })
                 |> ignore
                 onChange(~key=unitDimensionKey, ~newValue=toggledUnit)
-            
-
-              }
-              }>
+              }}>
               {unit->React.string}
             </button>
           : React.null
