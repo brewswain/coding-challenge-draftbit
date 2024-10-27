@@ -31,17 +31,12 @@ external fetch: (
 // ~body: Js.Dict.t<string>,
 Js.Promise.t<Response.t> = "fetch"
 
-let fetchJson = (~headers=Js.Dict.empty(), url: string): // ~headers=Js.Dict.empty(),
-// ~method="GET",
-// ~body=Js.Dict.empty(),
-// url: string,
-Js.Promise.t<Js.Json.t> => {
+let fetchJson = (~headers=Js.Dict.empty(), url: string): Js.Promise.t<Js.Json.t> => {
   let options = {
     "headers": headers,
   }
 
   fetch(url, options) |> Js.Promise.then_(res =>
-    // fetch(url, ~headers, ~method, ~body) |> Js.Promise.then_(res =>
     if !Response.ok(res) {
       res->Response.text->Js.Promise.then_(text => {
         let msg = `${res->Response.status->Js.Int.toString} ${res->Response.statusText}: ${text}`
@@ -52,23 +47,17 @@ Js.Promise.t<Js.Json.t> => {
     }
   )
 }
-let mutate = (
-  // ~method="POST",
-  // ~headers=Js.Dict.empty(),
-  // ~body=Js.Dict.empty(),
-  some_int: int,
-  some_text: string,
-  url: string,
-): Js.Promise.t<Js.Json.t> => {
+let mutate = (some_int: int, some_text: string, ~method="POST", url: string): Js.Promise.t<
+  Js.Json.t,
+> => {
   let body = {
     "some_int": some_int,
     "some_text": some_text,
   }
   let options = {
-    "headers": { "Content-Type": "application/json" },
-    "method": "POST",
+    "headers": {"Content-Type": "application/json"},
+    "method": method,
     "body": Js.Json.stringifyAny(body),
-    // "body": Js.Json.stringifyAny(body),
   }
   fetch(url, options) |> Js.Promise.then_(res =>
     if !Response.ok(res) {
