@@ -29,7 +29,9 @@ const setupApp = (client: Client): express.Application => {
 
       console.log(dimensions);
       const { rows } = await client.query(
-         `UPDATE dimensions SET ${dimensions.target_column}=${dimensions.updated_column}  RETURNING *`
+         // `UPDATE dimensions SET ${dimensions.target_column}=${dimensions.updated_column}  RETURNING *`
+         `UPDATE dimensions SET ${dimensions.target_column}=$1  RETURNING *`,
+         [dimensions.updated_column]
       );
       res.json(rows[0]);
    });
