@@ -18,15 +18,15 @@ const setupApp = (client: Client): express.Application => {
       const { rows } = await client.query(`SELECT * FROM example_table`);
       res.json(rows);
    });
-   app.post('/examples', async (_req, res) => {
-      const example = _req.body;
-      console.log(example);
+   app.post('/examples', async (req, res) => {
+      const example = req.body;
 
-      await client.query(
-         `INSERT INTO example_table (name, description) VALUES ($1, $2) WHERE name = $1`,
-         [example.some_int, example.some_str]
+      const {rows} = await client.query(
+         `UPDATE example_table SET some_int = $1, some_text = $2 WHERE id = 1 RETURNING *`,
+         [example.some_int, example.some_text]
       );
-      console.log(example);
+
+      res.json(rows);
    });
 
    app.post('/dimensions', async (req, res) => {

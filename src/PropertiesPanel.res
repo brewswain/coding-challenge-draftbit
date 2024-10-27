@@ -31,24 +31,30 @@ module ViewExamples = {
   let make = () => {
     let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
 
+
     React.useEffect1(() => {
       // Fetch the data from /examples and set the state when the promise resolves
-      Fetch.mutate(001, "test", `http://localhost:12346/examples`)
+      Fetch.fetchJson(`http://localhost:12346/examples`)
       |> Js.Promise.then_(examplesJson => {
         // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
-        Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
+        Js.Promise.resolve(Js.log(examplesJson))
       })
       // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
       |> ignore
+
+      // Mutate our data
+      Fetch.mutate(001, "test", `http://localhost:12346/examples`)
+      |> Js.Promise.then_(examplesJson => {
+        // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
+        Js.Promise.resolve({
+          Js.log(examplesJson)
+          setExamples(_ => Some(Obj.magic(examplesJson)))})
+      })
+      // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
+      |> ignore
+      
+      
       None
-      // Fetch.fetchJson(`http://localhost:12346/examples`)
-      // |> Js.Promise.then_(examplesJson => {
-      //   // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
-      //   Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
-      // })
-      // // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
-      // |> ignore
-      // None
     }, [setExamples])
 
     <div>

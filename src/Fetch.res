@@ -65,9 +65,9 @@ let mutate = (
     "some_text": some_text,
   }
   let options = {
-    // "headers": headers,
+    "headers": { "Content-Type": "application/json" },
     "method": "POST",
-    "body": body,
+    "body": Js.Json.stringifyAny(body),
     // "body": Js.Json.stringifyAny(body),
   }
   fetch(url, options) |> Js.Promise.then_(res =>
