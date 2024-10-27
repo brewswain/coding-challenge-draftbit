@@ -179,7 +179,6 @@ module DimensionHandlers = {
   }
 }
 
-
 // I Elected to keep everything in a monolithic file for ease of demonstration.
 // Actually, I was originally just planning to use some prop drilling to move our database row's id around for upserts, but decided to use context after realising that i'd actually have to go just deep enough for context to be worth it. Also, I was interested in seeing how using Context would feel in Rescript.
 module DimensionContext = {
@@ -220,7 +219,7 @@ module ViewExamples = {
   @react.component
   let make = () => {
     let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
-    let { setCurrentRow} = React.useContext(DimensionContext.context)
+    let {setCurrentRow} = React.useContext(DimensionContext.context)
 
     // Have multiple calls here to show that the data is in fact being mutated correctly. Demonstration of our
     React.useEffect1(() => {
@@ -228,11 +227,7 @@ module ViewExamples = {
       Fetch.fetchJson(`http://localhost:12346/examples`)
       |> Js.Promise.then_(examplesJson => {
         // NOTE: this uses an unsafe type cast, as safely parsing JSON in rescript is somewhat advanced.
-        Js.Promise.resolve({
-          
-          Js.log(examplesJson)
-          setExamples(_ => Some(Obj.magic(examplesJson)))
-        })
+        Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
       })
       // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
       |> ignore
@@ -250,31 +245,27 @@ module ViewExamples = {
       // dimensions block
 
       // Fetch the data from /dimensions and set the state when the promise resolves
-      // Fetch.fetchJson(`http://localhost:12346/dimensions`)
-      // |> Js.Promise.then_(currentRowJson => {
-      //   Js.Promise.resolve(
-      //   { 
-      //                 Js.log(currentRowJson)
-      //      setCurrentRow(Obj.magic(currentRowJson))
-      //     }
-      //   )
-      // })
-      // |> ignore
+      Fetch.fetchJson(`http://localhost:12346/dimensions`)
+      |> Js.Promise.then_(currentRowJson => {
+        Js.Promise.resolve({
+          setCurrentRow(Obj.magic(currentRowJson))
+        })
+      })
+      |> ignore
 
       // // Test Mutation
-      // Fetch.mutate(
-      //   ~new_value="1000",
-      //   ~dimension_key="margin_top",
-      //   ~method="PATCH",
-      //   `http://localhost:12346/dimensions`,
-      // )
-      // |> Js.Promise.then_(currentRowJson => {
-      //   Js.Promise.resolve({
-      //     Js.log(currentRowJson)
-      //     setCurrentRow(Obj.magic(currentRowJson))
-      //   })
-      // })
-      // |> ignore
+      Fetch.mutate(
+        ~new_value="1000",
+        ~dimension_key="margin_top",
+        ~method="PATCH",
+        `http://localhost:12346/dimensions`,
+      )
+      |> Js.Promise.then_(currentRowJson => {
+        Js.Promise.resolve({
+          setCurrentRow(Obj.magic(currentRowJson))
+        })
+      })
+      |> ignore
 
       None
     }, [setExamples])
@@ -292,9 +283,6 @@ module ViewExamples = {
     </div>
   }
 }
-
-
-
 
 module DimensionInput = {
   @react.component
