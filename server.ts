@@ -18,16 +18,6 @@ const setupApp = (client: Client): express.Application => {
       const { rows } = await client.query(`SELECT * FROM example_table`);
       res.json(rows);
    });
-   //   app.post("/examples", async (req, res) => {
-   //     const example = req.body;
-
-   //     const { rows } = await client.query(
-   //       `UPDATE example_table SET some_int = $1, some_text = $2 WHERE id = 1 RETURNING *`,
-   //       [example.some_int, example.some_text]
-   //     );
-
-   //     res.json(rows);
-   //   });
 
    app.get('/dimensions', async (_req, res) => {
       const { rows } = await client.query(`SELECT * FROM dimensions LIMIT 1`);

@@ -86,10 +86,10 @@ module DimensionHandlers = {
   }
 
   let handleChange = (~key: string, ~newValue: string, ~setDimensions, ~dimension_type) => {
-    // Naive validation to prevent the user from entering a number greater than 9999
+    // Naive validation to prevent the user from entering a number greater than 9999.x
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
 
-    // Verbose Switch statement to handle each key. I'm sure there's a more elegant way to do this.
+    // Verbose Switch statement to handle each key. I'm sure there's a more elegant way to do this, but doing stuff like [key]: validatedValue wasn't working like I expected.
     setDimensions(prevDimensions =>
       switch key {
       | "margin_top" => {
@@ -208,6 +208,8 @@ module DimensionContext = {
 
 // This component provides a simplified example of fetching JSON data from
 // the backend and rendering it on the screen.
+
+// NOTE: I was going to remove this for code cleanliness, but I like the idea of keeping it in as a reference point.
 module ViewExamples = {
   // Type of the data returned by the /examples endpoint
   type example = {
@@ -219,8 +221,6 @@ module ViewExamples = {
   @react.component
   let make = () => {
     let (examples: option<array<example>>, setExamples) = React.useState(_ => None)
-    let {setCurrentRow} = React.useContext(DimensionContext.context)
-
     // Have multiple calls here to show that the data is in fact being mutated correctly. Demonstration of our
     React.useEffect1(() => {
       // Fetch the data from /examples and log state when the promise resolves
@@ -230,41 +230,6 @@ module ViewExamples = {
         Js.Promise.resolve(setExamples(_ => Some(Obj.magic(examplesJson))))
       })
       // The "ignore" function is necessary because each statement is expected to return `unit` type, but Js.Promise.then return a Promise type.
-      |> ignore
-
-      // Mutate our data
-      // Fetch.mutate(001, "test", ~method="POST", `http://localhost:12346/examples`)
-      // |> Js.Promise.then_(examplesJson => {
-      //   Js.Promise.resolve({
-      //     Js.log(examplesJson)
-      //     setExamples(_ => Some(Obj.magic(examplesJson)))
-      //   })
-      // })
-      // |> ignore
-
-      // dimensions block
-
-      // Fetch the data from /dimensions and set the state when the promise resolves
-      Fetch.fetchJson(`http://localhost:12346/dimensions`)
-      |> Js.Promise.then_(currentRowJson => {
-        Js.Promise.resolve({
-          setCurrentRow(Obj.magic(currentRowJson))
-        })
-      })
-      |> ignore
-
-      // // Test Mutation
-      Fetch.mutate(
-        ~new_value="1000",
-        ~dimension_key="margin_top",
-        ~method="PATCH",
-        `http://localhost:12346/dimensions`,
-      )
-      |> Js.Promise.then_(currentRowJson => {
-        Js.Promise.resolve({
-          setCurrentRow(Obj.magic(currentRowJson))
-        })
-      })
       |> ignore
 
       None
@@ -288,8 +253,9 @@ module DimensionInput = {
   @react.component
   let make = (~value, ~unit, ~onChange, ~dimensionKey) => {
     let (isFocused, setIsFocused) = React.useState(() => false)
+    let {setCurrentRow} = React.useContext(DimensionContext.context)
 
-    // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used since working out regex handling while learning rescript seemed like a rabbithole for something that could/should be a very concise solution.
+    // LLM generated regex validation to ensure only numbers are inputted -- This is the one bit of LLM generated code I used(other than autocomplete on my extremely large switch cases above) since working out regex handling while learning rescript seemed like a rabbithole for something that could/should be a very concise solution.
     let handleKeyDown = event => {
       let key = ReactEvent.Keyboard.key(event)
       let allowedCharactersRegex = %re("/[0-9]|Backspace|Delete|ArrowLeft|ArrowRight/")
@@ -317,10 +283,25 @@ module DimensionInput = {
           let input = ReactEvent.Mouse.currentTarget(event)
           input["select"](.)
         }}
+
+        // Multifunctional -- Firstly, we ensure that a blank input reverts to "auto" on blur, and then we make our API call. The API call being on blur should help reduce unnecessary API calls--I Initially was going to debounce our handleChange for the API call, but this felt like the better choice.
         onBlur={event => {
           let targetValue = ReactEvent.Focus.target(event)["value"]
           let value = targetValue === "" ? "auto" : targetValue
           onChange(~key=dimensionKey, ~newValue=value)
+
+          Fetch.mutate(
+            ~new_value=value,
+            ~dimension_key=dimensionKey,
+            ~method="PATCH",
+            `http://localhost:12346/dimensions`,
+          )
+          |> Js.Promise.then_(currentRowJson => {
+            Js.Promise.resolve({
+              setCurrentRow(Obj.magic(currentRowJson))
+            })
+          })
+          |> ignore
         }}
         value
         onChange={event =>
@@ -333,9 +314,28 @@ module DimensionInput = {
           ? <button
               className="Dimension-button"
               disabled={!isFocused}
-              onClick={_ =>
-                onChange(~key=dimensionKey ++ "_unit", ~newValue=unit === "px" ? "%" : "px")}>
+              onClick={_ =>{
+                let toggledUnit = unit === "px" ? "%" : "px"
+                let unitDimensionKey = dimensionKey ++ "_unit"
+                Fetch.mutate(
+                              ~new_value=toggledUnit,
+            ~dimension_key=unitDimensionKey,
+            ~method="PATCH",
+            `http://localhost:12346/dimensions`,
+          )
+          |> Js.Promise.then_(currentRowJson => {
+            Js.Promise.resolve({
+              setCurrentRow(Obj.magic(currentRowJson))
+            })
+          })
+          |> ignore
+                onChange(~key=unitDimensionKey, ~newValue=toggledUnit)}
+                
+                }
+                
+                >
               {unit->React.string}
+              
             </button>
           : React.null
       }
@@ -395,8 +395,24 @@ module PaddingSelector = {
 
 module MarginSelector = {
   @react.component
+  
+
   let make = () => {
-    let {currentRow, setCurrentRow} = React.useContext(DimensionContext.context)
+
+    let {currentRow,setCurrentRow} = React.useContext(DimensionContext.context)
+
+  React.useEffect1(() => {
+    // Fetch the data from /dimensions and set the state when the promise resolves
+    Fetch.fetchJson(`http://localhost:12346/dimensions`)
+    |> Js.Promise.then_(currentRowJson => {
+      Js.Promise.resolve({
+        setCurrentRow(Obj.magic(currentRowJson))
+      })
+    })
+    |> ignore
+
+    None
+  }, [setCurrentRow])
 
     let handleChange = (~key: string, ~newValue: string) => {
       DimensionHandlers.handleChange(
@@ -457,9 +473,8 @@ let make = () => {
         DimensionContext.currentRow: currentRowState,
         DimensionContext.setCurrentRow: setCurrentRowState,
       }>
-      <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
+      // <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
-      <Collapsible title="Size"> <span> {React.string("example")} </span> </Collapsible>
     </DimensionContext.Provider>
   </aside>
 }
