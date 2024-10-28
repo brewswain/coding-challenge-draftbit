@@ -460,6 +460,8 @@ let make = () => {
         DimensionContext.currentRow: currentRowState,
         DimensionContext.setCurrentRow: setCurrentRowState,
       }>
+
+      // Left here for re-enabling just in case
       // <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
     </DimensionContext.Provider>
