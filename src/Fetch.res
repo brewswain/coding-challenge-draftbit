@@ -23,13 +23,7 @@ type options = {
 }
 
 @val
-external fetch: (
-  string,
-  'options,
-) => // ~headers: Js.Dict.t<string>,
-// ~method: string,
-// ~body: Js.Dict.t<string>,
-Js.Promise.t<Response.t> = "fetch"
+external fetch: (string, 'options) => Js.Promise.t<Response.t> = "fetch"
 
 let fetchJson = (~headers=Js.Dict.empty(), url: string): Js.Promise.t<Js.Json.t> => {
   let options = {

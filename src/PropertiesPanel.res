@@ -62,7 +62,7 @@ module DimensionHandlers = {
   }
 
   let handleChange = (~key: string, ~newValue: string, ~setDimensions, ~dimension_type) => {
-    // Naive validation to prevent the user from entering a number greater than 9999.x
+    // Naive validation to prevent the user from entering a number greater than 9999. Can also do something better where it would look to see if the input's length is more than 4 characters, and snip the input if so.
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
 
     // Verbose Switch statement to handle each key. I'm sure there's a more elegant way to do this, but doing stuff like [key]: validatedValue wasn't working like I expected.
@@ -460,7 +460,6 @@ let make = () => {
         DimensionContext.currentRow: currentRowState,
         DimensionContext.setCurrentRow: setCurrentRowState,
       }>
-
       // Left here for re-enabling just in case
       // <Collapsible title="Load examples"> <ViewExamples /> </Collapsible>
       <Collapsible title="Margins & Padding"> <MarginSelector /> </Collapsible>
