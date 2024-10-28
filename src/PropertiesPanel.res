@@ -61,30 +61,6 @@ module DimensionHandlers = {
     dimension_type: "margin",
   }
 
-  type dimensions = {
-    top: string,
-    bottom: string,
-    left: string,
-    right: string,
-    top_unit: string,
-    bottom_unit: string,
-    left_unit: string,
-    right_unit: string,
-    dimension_type: string,
-  }
-
-  let createInitialState = () => {
-    top: "auto",
-    bottom: "auto",
-    left: "auto",
-    right: "auto",
-    top_unit: "px",
-    bottom_unit: "px",
-    left_unit: "px",
-    right_unit: "px",
-    dimension_type: "padding",
-  }
-
   let handleChange = (~key: string, ~newValue: string, ~setDimensions, ~dimension_type) => {
     // Naive validation to prevent the user from entering a number greater than 9999.x
     let validatedValue = Belt.Int.fromString(newValue) > Some(9999) ? "9999" : newValue
@@ -302,9 +278,7 @@ module DimensionInput = {
           })
           |> ignore
         }}
-
         value
-
         // An improvement here would be to debounce our API call to prevent spamming the backend.
         onChange={event => {
           let targetValue = ReactEvent.Form.target(event)["value"]
